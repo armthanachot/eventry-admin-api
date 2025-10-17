@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-function encrypt(plaintext: string): string {
+const encrypt = (plaintext: string): string => {
   const iv = crypto.randomBytes(12);
   const keyBuffer = Buffer.from(process.env.ENCRYPTION_KEY || '', 'hex');
   const cipher = crypto.createCipheriv('aes-256-gcm', keyBuffer, iv);
@@ -16,7 +16,7 @@ function encrypt(plaintext: string): string {
   ].join(':');
 }
 
-function decrypt(ciphertext: string): string {
+const decrypt = (ciphertext: string): string => {
   const [ivB64, tagB64, encryptedB64] = ciphertext.split(':');
   const iv = Buffer.from(ivB64, 'base64');
   const tag = Buffer.from(tagB64, 'base64');
@@ -28,4 +28,10 @@ function decrypt(ciphertext: string): string {
   decrypted += decipher.final('utf8');
   return decrypted;
 }
+
+export const comparePassword = (plaintext: string, ciphertext: string): boolean => {
+  return plaintext === decrypt(ciphertext);
+}
+
+
 export { encrypt, decrypt };
