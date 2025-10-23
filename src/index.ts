@@ -10,5 +10,5 @@ const app = new Elysia({
 .use(roleRouter).use(userRouter).use(eventRouter).use(oauthRouter).listen(process.env.PORT);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`
 );
