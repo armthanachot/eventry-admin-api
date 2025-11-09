@@ -1,7 +1,8 @@
-import { Elysia } from "elysia"
+import { Elysia, redirect } from "elysia"
 import { oauth2 } from "elysia-oauth2"
 import OAuthService from "./service"
 import { OAuthCallbackResponse } from "./model/response"
+import { GoogleRefreshToken } from "./model/request"
 
 const oauthRouter = new Elysia({
     prefix: '/oauth'
@@ -57,7 +58,12 @@ const oauthRouter = new Elysia({
             }
         }
     })
-    .get('/google/auth', ({ oauth2 }) => oauth2.redirect("Google", ["openid", "email", "profile"]))
+    .get('/google/auth', async ({ oauth2 }) => {
+        const url = oauth2.createURL("Google", ["openid", "email", "profile"])
+        url.searchParams.set("access_type", "offline")
+        url.searchParams.set("prompt", "consent") //for refresh token
+        return redirect(url.href)
+    })
     .get('/google/callback', async ({ oauth2 }) => await OAuthService.GoogleCallback(await oauth2.authorize("Google"))
         , {
             // response: OAuthCallbackResponse
@@ -65,11 +71,8 @@ const oauthRouter = new Elysia({
     .get('/google/validate-token', async ({ headers, store }) => {
         try {
             const authorization = headers.authorization
-            console.log(authorization);
-
             const [_, bearerToken] = authorization?.split(" ") || [];
             const res = await fetch(`${store.googleURL.tokenInfo}?access_token=${bearerToken}`)
-
             return {
                 success: true,
                 message: "Google token validated successfully",
@@ -78,6 +81,18 @@ const oauthRouter = new Elysia({
         } catch (error) {
             console.log(error);
         }
+    })
+    .post('/google/refresh-token', async ({ oauth2, body }) => {
+        const { refreshToken } = body
+
+        const newTokens = await oauth2.refresh("Google", refreshToken)
+        return {
+            success: true,
+            message: "Google token refreshed successfully",
+            data: newTokens
+        }
+    }, {
+        body: GoogleRefreshToken
     })
 
 export default oauthRouter

@@ -15,3 +15,10 @@ export type TGetUserInfo = {
 }
 
 export type TCreateUser = Static<typeof CreateUser>
+
+
+export const GoogleRefreshToken = t.Object({
+    refreshToken: t.String()
+})
+
+export type TGoogleRefreshToken = Static<typeof GoogleRefreshToken>

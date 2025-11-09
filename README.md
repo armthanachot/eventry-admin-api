@@ -19,3 +19,27 @@ supabase enable vector extension
 ```sql
 create extension if not exists vector;
 ```
+
+
+# Note
+
+`Facebook` ไม่มี Refresh Token มีแต่ Long Life Token จะให้ token ที่มีอายุนานๆเช่น 60 วันมา แล้วถ้าหมดก็ต้องบังคับออกแล้วต่อใหม่
+
+`Google` มี Refresh Token ตอนที่ build url เพื่อยิง auth ต้อง set พวกนี้
+```js
+url.searchParams.set("access_type", "offline")
+url.searchParams.set("prompt", "consent") //for refresh token
+
+// ถ้าไม่ set แล้วไป get refresh token จะเจอแบบนี้ `Missing or invalid 'refresh_token' field`
+```
+
+เต็มๆ
+
+```js
+ .get('/google/auth', async ({ oauth2 }) => {
+        const url = oauth2.createURL("Google",["openid", "email", "profile"])
+        url.searchParams.set("access_type", "offline")
+        url.searchParams.set("prompt", "consent") //for refresh token 
+        return redirect(url.href)
+    })
+```

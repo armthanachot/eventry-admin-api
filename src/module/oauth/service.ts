@@ -1,26 +1,33 @@
-import { OAuth2Tokens } from "elysia-oauth2"
+import { oauth2, OAuth2Tokens } from "elysia-oauth2"
 import { TGetUserInfo } from "./model/request";
 import { Provider } from "../../pkg/constant/provider";
+import axios from "axios";
 
 class OAuthService {
     async FacebookCallback(tokens: OAuth2Tokens) {
         const accessToken = tokens.accessToken()
-       const userInfo = await this._getUserInfo({
-        accessToken,
-        provider: Provider.FACEBOOK,
-        scopeFieldName: "fields",
-        scopes: ["id", "name", "picture", "email"]
-       })
+        const userInfo = await this._getUserInfo({
+            accessToken,
+            provider: Provider.FACEBOOK,
+            scopeFieldName: "fields",
+            scopes: ["id", "name", "picture", "email"],
+        })
 
-       return {
-        success: true,
-        message: "Facebook callback successful",
-        data: userInfo
-       }
+        console.log(accessToken);
+        console.log(JSON.stringify(userInfo, null, 2));
+        console.log("expirde: ",tokens.accessTokenExpiresAt()?.toISOString()); //long live token
+        return {
+            success: true,
+            message: "Facebook callback successful",
+            data: userInfo
+        }
     }
 
-    async GoogleCallback(tokens: OAuth2Tokens) { 
+    async GoogleCallback(tokens: OAuth2Tokens) {
         const accessToken = tokens.accessToken()
+        console.log("expirde: ",tokens.accessTokenExpiresAt()?.toISOString());
+        
+        const refreshToken = tokens.refreshToken()
         const userInfo = await this._getUserInfo({
             accessToken,
             provider: Provider.GOOGLE,
@@ -31,8 +38,15 @@ class OAuthService {
         return {
             success: true,
             message: "Google callback successful",
-            data: userInfo
+            data: {
+                userInfo,
+                accessToken,
+                refreshToken
+            }
         }
+    }
+
+    async GoogleRefreshToken(oldrefreshToken: string) {
     }
 
     private async _getUserInfo(payload: TGetUserInfo): Promise<Response> {
